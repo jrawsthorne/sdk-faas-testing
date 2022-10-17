@@ -8,6 +8,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "couchbase": "file:./couchnode"
+    "@google-cloud/functions-framework": "^3.1.2",
+    "couchbase": "^4.1.3"
   }
 }

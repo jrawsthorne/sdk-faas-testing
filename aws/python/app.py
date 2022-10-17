@@ -3,20 +3,13 @@ from couchbase.options import ClusterOptions
 from couchbase.auth import PasswordAuthenticator
 import os
 
-cluster = None
-
-def get_cluster():
-    global cluster
-    if cluster is None:
-        cluster = Cluster(os.environ["CONNECTION_STRING"], ClusterOptions(PasswordAuthenticator("Administrator", "password")))
-    return cluster
+cluster = Cluster(os.environ["CONNECTION_STRING"], ClusterOptions(PasswordAuthenticator("Administrator", "password")))
 
 def handler(event, context):
-    cluster = get_cluster()
     collection = cluster.bucket("default").default_collection()
     if event["operation"] == "upsert":
         return handle_upsert(collection, event)
-    elif event["operations"] == "get":
+    elif event["operation"] == "get":
         return handle_get(collection, event)
     else:
         response = {
@@ -30,7 +23,7 @@ def handle_get(collection, event):
     resp = collection.get(event["key"])
     response = {
       "statusCode": 200,
-      "body": resp.content,
+      "body": resp.content_as[dict],
     }
     return response
   except Exception as e:
@@ -44,8 +37,8 @@ def handle_upsert(collection, event):
     try:
         resp = collection.upsert(event["key"], event["value"])
         response = {
-        "statusCode": 200,
-        "body": resp.cas,
+          "statusCode": 200,
+          "body": resp.cas,
         }
         return response
     except Exception as e:

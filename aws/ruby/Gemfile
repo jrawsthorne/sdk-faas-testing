@@ -1,0 +1,3 @@
+source "https://rubygems.org"
+
+gem "couchbase", git: 'https://github.com/couchbase/couchbase-ruby-client', branch: 'main', submodules: true

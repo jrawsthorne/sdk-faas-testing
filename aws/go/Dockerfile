@@ -1,15 +1,13 @@
-FROM amazonlinux:2.0.20220912.1
-
-RUN yum install -y tar gzip zip
-
-RUN curl -LO https://go.dev/dl/go1.18.6.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.18.6.linux-amd64.tar.gz
-
-ENV PATH=$PATH:/usr/local/go/bin
+FROM golang:1.18 as builder
 
 WORKDIR /app
 
-COPY go.mod go.sum main.go ./
+COPY main.go go.mod go.sum ./
+
 RUN go build main.go
 
-VOLUME /out
+FROM public.ecr.aws/lambda/go:1
+
+COPY --from=builder /app/main ${LAMBDA_TASK_ROOT}
+
+CMD [ "main" ]
