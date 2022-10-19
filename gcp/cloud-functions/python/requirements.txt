@@ -1,0 +1,2 @@
+couchbase==4.0.5
+functions-framework==3.*
