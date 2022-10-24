@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -e
 docker build -t faas-python .
-aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 516524556673.dkr.ecr.us-east-2.amazonaws.com
-aws ecr create-repository --repository-name faas-python || true
-docker tag  faas-python:latest 516524556673.dkr.ecr.us-east-2.amazonaws.com/faas-python:latest
-docker push 516524556673.dkr.ecr.us-east-2.amazonaws.com/faas-python:latest
+rm -rf function.zip || true
+docker run -v $PWD:/out -it faas-python bash -c 'cd /app/package && zip -r /out/function.zip . && cd .. && zip -g /out/function.zip lib/* app.py'
 aws lambda delete-function --function-name python || true
+aws s3 cp function.zip s3://sdkqe-lambda-functions/python/function.zip
 aws lambda create-function \
     --function-name python \
-    --environment 'Variables={CONNECTION_STRING=couchbase://node1-6cf4e3ca.cbqeoc.com}' \
-    --code ImageUri=516524556673.dkr.ecr.us-east-2.amazonaws.com/faas-python:latest \
+    --runtime python3.9 \
+    --environment 'Variables={CONNECTION_STRING=couchbase://node1-4bf1f1ac.cbqeoc.com}' \
+    --code S3Bucket=sdkqe-lambda-functions,S3Key=python/function.zip \
     --role arn:aws:iam::516524556673:role/sdkqe_lambda \
-    --package-type Image
+    --handler app.handler
